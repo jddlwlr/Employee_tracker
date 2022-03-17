@@ -5,7 +5,7 @@ const cTable = require("console.table");
 
 require("dotenv").config();
 
-// db to database
+// connection to database
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -13,24 +13,7 @@ const db = mysql.createConnection({
   database: "employee_db",
 });
 
-// Create a movie
-// app.post("/api/new-movie", ({ body }, res) => {
-//   const sql = `INSERT INTO movies (movie_name)
-//     VALUES (?)`;
-//   const params = [body.movie_name];
-
-//   db.query(sql, params, (err, result) => {
-//     if (err) {
-//       res.status(400).json({ error: err.message });
-//       return;
-//     }
-//     res.json({
-//       message: "success",
-//       data: body,
-//     });
-//   });
-// });
-
+// main menu prompt
 const promptUser = () => {
   inquirer
     .prompt([
@@ -112,16 +95,16 @@ logRoles = () => {
 
 logEmployees = () => {
   const sql = `SELECT employee.id, 
-                      employee.first_name, 
-                      employee.last_name, 
-                      role.title, 
-                      department.name AS department,
-                      role.salary, 
-                      manager.first_name, manager.last_name,
-               FROM employee
-                      LEFT JOIN role ON employee.role_id = role.id
-                      LEFT JOIN department ON role.department_id = department.id
-                      LEFT JOIN employee manager ON employee.manager_id = manager.id`;
+      employee.first_name, 
+      employee.last_name, 
+      role.title, 
+      department.name AS department,
+      role.salary, 
+      CONCAT (manager.first_name, " ", manager.last_name) AS manager
+      FROM employee
+      LEFT JOIN role ON employee.role_id = role.id
+      LEFT JOIN department ON role.department_id = department.id
+      LEFT JOIN employee manager ON employee.manager_id = manager.id`;
 
   db.query(sql, (err, rows) => {
     if (err) throw err;
@@ -166,7 +149,7 @@ newRole = () => {
       },
     ])
     .then((answer) => {
-      const params = [answer.role, answer.salary];
+      const params = [answer.newRole, answer.salary];
 
       // grab dept from department table
       const roleSql = `SELECT name, id FROM department`;
@@ -187,9 +170,10 @@ newRole = () => {
             const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
             const dept = deptChoice.dept;
             params.push(dept);
+            console.log(sql);
             db.query(sql, params, (err, result) => {
               if (err) throw err;
-              showRoles();
+              logRoles();
             });
           });
       });
@@ -197,157 +181,145 @@ newRole = () => {
 };
 
 newEmployee = () => {
-    inquirer.prompt([
+  inquirer
+    .prompt([
       {
-        type: 'input',
-        name: 'fistName',
+        type: "input",
+        name: "fistName",
         message: "First name of new Employee?",
       },
       {
-        type: 'input',
-        name: 'lastName',
+        type: "input",
+        name: "lastName",
         message: "Last name of new Employee?",
-      }
+      },
     ])
-      .then(answer => {
-        const params = [answer.fistName, answer.lastName]
+    .then((answer) => {
+      const params = [answer.fistName, answer.lastName];
 
-        const role = `SELECT role.id, role.title FROM role`;
-      
-        connection.promise().query(role, (err, data) => {
-          if (err) throw err; 
-          
-          const roles = data.map(({ id, title }) => ({ name: title, value: id }));
-    
-          inquirer.prompt([
-                {
-                  type: 'list',
-                  name: 'role',
-                  message: "What is the employee's role?",
-                  choices: roles
-                }
-              ])
-                .then(roleChoice => {
-                  const role = roleChoice.role;
-                  params.push(role);
-    
-                  const managerSql = `SELECT * FROM employee`;
-    
-                  connection.promise().query(managerSql, (err, data) => {
-                    if (err) throw err;
-    
-                    const managers = data.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
-    
-                    inquirer.prompt([
-                      {
-                        type: 'list',
-                        name: 'manager',
-                        message: "Who is the employee's manager?",
-                        choices: managers
-                      }
-                    ])
-                      .then(managerChoice => {
-                        const manager = managerChoice.manager;
-                        params.push(manager);
-    
-                        const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+      const role = `SELECT role.id, role.title FROM role`;
+
+      db.query(role, (err, data) => {
+        if (err) throw err;
+
+        const roles = data.map(({ id, title }) => ({ name: title, value: id }));
+
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "role",
+              message: "Role?",
+              choices: roles,
+            },
+          ])
+          .then((roleChoice) => {
+            const role = roleChoice.role;
+            params.push(role);
+
+            const managerSql = `SELECT * FROM employee`;
+
+            db.query(managerSql, (err, data) => {
+              if (err) throw err;
+
+              const managers = data.map(({ id, first_name, last_name }) => ({
+                name: first_name + " " + last_name,
+                value: id,
+              }));
+
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "manager",
+                    message: "Who is the employee's manager?",
+                    choices: managers,
+                  },
+                ])
+                .then((managerChoice) => {
+                  const manager = managerChoice.manager;
+                  params.push(manager);
+
+                  const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
                         VALUES (?, ?, ?, ?)`;
-    
-                        connection.query(sql, params, (err, result) => {
-                        if (err) throw err;
+
+                  db.query(sql, params, (err, result) => {
+                    if (err) throw err;
+                    logEmployees();
+                    promptUser();
                   });
                 });
-              });
             });
-         });
+          });
       });
-    };
+    });
 };
 
 // /new functions
 
-updateEmployee = () => {};
+// update function
 
-// Modify this
-// app.get("/api/movies", (req, res) => {
-//   const sql = `SELECT id, movie_name AS title FROM movies`;
+updateEmployee = () => {
+  const employeeSql = `SELECT * FROM employee`;
 
-//   db.query(sql, (err, rows) => {
-//     if (err) {
-//       res.status(500).json({ error: err.message });
-//       return;
-//     }
-//     res.json({
-//       message: "success",
-//       data: rows,
-//     });
-//   });
-// });
+  db.query(employeeSql, (err, data) => {
+    if (err) throw err;
 
-// // And This
-// app.get("/api/movie-reviews", (req, res) => {
-//   const sql = `SELECT movies.movie_name AS movie, reviews.review FROM reviews LEFT JOIN movies ON reviews.movie_id = movies.id ORDER BY movies.movie_name;`;
-//   db.query(sql, (err, rows) => {
-//     if (err) {
-//       res.status(500).json({ error: err.message });
-//       return;
-//     }
-//     res.json({
-//       message: "success",
-//       data: rows,
-//     });
-//   });
-// });
+    const employees = data.map(({ id, first_name, last_name }) => ({
+      name: first_name + " " + last_name,
+      value: id,
+    }));
 
-// Delete a movie
-// app.delete("/api/movie/:id", (req, res) => {
-//   const sql = `DELETE FROM movies WHERE id = ?`;
-//   const params = [req.params.id];
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "name",
+          message: "Select Employee",
+          choices: employees,
+        },
+      ])
+      .then((empChoice) => {
+        const employee = empChoice.name;
+        const params = [];
+        params.push(employee);
 
-//   db.query(sql, params, (err, result) => {
-//     if (err) {
-//       res.statusMessage(400).json({ error: res.message });
-//     } else if (!result.affectedRows) {
-//       res.json({
-//         message: "Movie not found",
-//       });
-//     } else {
-//       res.json({
-//         message: "deleted",
-//         changes: result.affectedRows,
-//         id: req.params.id,
-//       });
-//     }
-//   });
-// });
+        const roleSql = `SELECT * FROM role`;
 
-// // BONUS: Update review name
-// app.put("/api/review/:id", (req, res) => {
-//   const sql = `UPDATE reviews SET review = ? WHERE id = ?`;
-//   const params = [req.body.review, req.params.id];
+        db.query(roleSql, (err, data) => {
+          if (err) throw err;
 
-//   db.query(sql, params, (err, result) => {
-//     if (err) {
-//       res.status(400).json({ error: err.message });
-//     } else if (!result.affectedRows) {
-//       res.json({
-//         message: "Movie not found",
-//       });
-//     } else {
-//       res.json({
-//         message: "success",
-//         data: req.body,
-//         changes: result.affectedRows,
-//       });
-//     }
-//   });
-// });
+          const roles = data.map(({ id, title }) => ({
+            name: title,
+            value: id,
+          }));
 
-// Default response for any other request (Not Found)
-// app.use((req, res) => {
-//   res.status(404).end();
-// });
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "role",
+                message: "Select new Role?",
+                choices: roles,
+              },
+            ])
+            .then((roleChoice) => {
+              const role = roleChoice.role;
+              params.push(role);
 
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+              let employee = params[0];
+              params[0] = role;
+              params[1] = employee;
+
+              const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
+
+              db.query(sql, params, (err, result) => {
+                if (err) throw err;
+
+                logEmployees();
+              });
+            });
+        });
+      });
+  });
+};
