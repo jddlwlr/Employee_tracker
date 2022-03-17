@@ -195,7 +195,21 @@ newRole = () => {
     });
 };
 
-newEmployee = () => {};
+newEmployee = () => {
+    inquirer.prompt([
+      {
+        type: 'input',
+        name: 'fistName',
+        message: "First name of new Employee?",
+      },
+      {
+        type: 'input',
+        name: 'lastName',
+        message: "Last name of new Employee?",
+      }
+    ])
+      .then(answer => {
+};
 
 // /new functions
 
