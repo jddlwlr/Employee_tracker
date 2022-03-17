@@ -133,11 +133,71 @@ logEmployees = () => {
 
 // new functions
 
-newDepartment = () => {};
-newRole = () => {};
+newDepartment = () => {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "newDepartment",
+        message: "Name of new department?",
+      },
+    ])
+    .then((answer) => {
+      const sql = `INSERT INTO department (name) VALUES (?)`;
+      db.query(sql, answer.newDepartment, (err, result) => {
+        if (err) throw err;
+
+        logDepartments();
+      });
+    });
+};
+newRole = () => {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "newRole",
+        message: "Name of new Role?",
+      },
+      {
+        type: "input",
+        name: "salary",
+        message: "Salary of new Role?",
+      },
+    ])
+    .then((answer) => {
+      const params = [answer.role, answer.salary];
+
+      // grab dept from department table
+      const roleSql = `SELECT name, id FROM department`;
+
+      db.query(roleSql, (err, data) => {
+        if (err) throw err;
+
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "dept",
+              message: "Deparment of Role?",
+            },
+          ])
+          .then((deptChoice) => {
+            const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
+
+            db.query(sql, params, (err, result) => {
+              if (err) throw err;
+
+              showRoles();
+            });
+          });
+      });
+    });
+};
+
 newEmployee = () => {};
 
-// / new functions
+// /new functions
 
 updateEmployee = () => {};
 
