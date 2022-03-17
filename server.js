@@ -5,8 +5,8 @@ const cTable = require("console.table");
 
 require("dotenv").config();
 
-// connection to database
-const connection = mysql.createConnection({
+// db to database
+const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: process.env.DB_PASSWORD,
@@ -82,27 +82,63 @@ const promptUser = () => {
       }
 
       if (choices === "No Action") {
-        connection.end();
+        db.end();
       }
     });
 };
 
 promptUser();
 
+// log functions
 logDepartments = () => {
   const sql = `SELECT department.id AS id, department.name AS department FROM department`;
 
-  connection.query(sql, (err, rows) => {
+  db.query(sql, (err, rows) => {
     if (err) throw err;
     console.table(rows);
+    promptUser();
   });
 };
-logRoles = () => {};
-logEmployees = () => {};
+
+logRoles = () => {
+  const sql = `SELECT role.id, role.title, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id`;
+
+  db.query(sql, (err, rows) => {
+    if (err) throw err;
+    console.table(rows);
+    promptUser();
+  });
+};
+
+logEmployees = () => {
+  const sql = `SELECT employee.id, 
+                      employee.first_name, 
+                      employee.last_name, 
+                      role.title, 
+                      department.name AS department,
+                      role.salary, 
+                      manager.first_name, manager.last_name,
+               FROM employee
+                      LEFT JOIN role ON employee.role_id = role.id
+                      LEFT JOIN department ON role.department_id = department.id
+                      LEFT JOIN employee manager ON employee.manager_id = manager.id`;
+
+  db.query(sql, (err, rows) => {
+    if (err) throw err;
+    console.table(rows);
+    promptUser();
+  });
+};
+// /log functions
+
+// new functions
 
 newDepartment = () => {};
 newRole = () => {};
 newEmployee = () => {};
+
+// / new functions
+
 updateEmployee = () => {};
 
 // Modify this
