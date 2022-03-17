@@ -9,7 +9,7 @@ require("dotenv").config();
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: process.env.MYSQL_PASSWORD,
+  password: process.env.DB_PASSWORD,
   database: "employee_db",
 });
 
@@ -87,6 +87,8 @@ const promptUser = () => {
     });
 };
 
+promptUser();
+
 logDepartments = () => {};
 logRoles = () => {};
 logEmployees = () => {};
@@ -97,35 +99,35 @@ newEmployee = () => {};
 updateEmployee = () => {};
 
 // Modify this
-app.get("/api/movies", (req, res) => {
-  const sql = `SELECT id, movie_name AS title FROM movies`;
+// app.get("/api/movies", (req, res) => {
+//   const sql = `SELECT id, movie_name AS title FROM movies`;
 
-  db.query(sql, (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({
-      message: "success",
-      data: rows,
-    });
-  });
-});
+//   db.query(sql, (err, rows) => {
+//     if (err) {
+//       res.status(500).json({ error: err.message });
+//       return;
+//     }
+//     res.json({
+//       message: "success",
+//       data: rows,
+//     });
+//   });
+// });
 
-// And This
-app.get("/api/movie-reviews", (req, res) => {
-  const sql = `SELECT movies.movie_name AS movie, reviews.review FROM reviews LEFT JOIN movies ON reviews.movie_id = movies.id ORDER BY movies.movie_name;`;
-  db.query(sql, (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({
-      message: "success",
-      data: rows,
-    });
-  });
-});
+// // And This
+// app.get("/api/movie-reviews", (req, res) => {
+//   const sql = `SELECT movies.movie_name AS movie, reviews.review FROM reviews LEFT JOIN movies ON reviews.movie_id = movies.id ORDER BY movies.movie_name;`;
+//   db.query(sql, (err, rows) => {
+//     if (err) {
+//       res.status(500).json({ error: err.message });
+//       return;
+//     }
+//     res.json({
+//       message: "success",
+//       data: rows,
+//     });
+//   });
+// });
 
 // Delete a movie
 // app.delete("/api/movie/:id", (req, res) => {
@@ -172,10 +174,10 @@ app.get("/api/movie-reviews", (req, res) => {
 // });
 
 // Default response for any other request (Not Found)
-app.use((req, res) => {
-  res.status(404).end();
-});
+// app.use((req, res) => {
+//   res.status(404).end();
+// });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
