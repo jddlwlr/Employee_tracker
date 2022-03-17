@@ -89,7 +89,14 @@ const promptUser = () => {
 
 promptUser();
 
-logDepartments = () => {};
+logDepartments = () => {
+  const sql = `SELECT department.id AS id, department.name AS department FROM department`;
+
+  connection.query(sql, (err, rows) => {
+    if (err) throw err;
+    console.table(rows);
+  });
+};
 logRoles = () => {};
 logEmployees = () => {};
 
